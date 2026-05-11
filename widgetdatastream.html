@@ -322,6 +322,7 @@
   </div>
 
   <script>
+const API_BASE = "https://cloudeck-backend.onrender.com/api";
   // Parse query params
   function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -615,6 +616,48 @@
         </form>
       `;
 
+      case "joystick":
+    return `
+        <form id="widgetForm">
+            <input type="hidden" name="templateId" value="${widget.templateId}">
+            <input type="hidden" name="widgetId" value="${widget.id}">
+            <input type="hidden" name="type" value="${widget.type}">
+            
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" name="title" placeholder="My Joystick" value="Joystick Control">
+            </div>
+            
+            <div class="form-group">
+                <label>Virtual Pin</label>
+                <input type="number" name="pin" placeholder="e.g., 1" min="0" max="127" value="1">
+            </div>
+            
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" name="description" placeholder="Describe what this joystick controls">
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="returnToCenter" id="returnToCenter" checked>
+                <label for="returnToCenter">Return to center when released</label>
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <input type="checkbox" name="showValues" id="showValues" checked>
+                <label for="showValues">Show X/Y values display</label>
+            </div>
+            
+            <div class="form-group">
+                <label>Sensitivity</label>
+                <select name="sensitivity">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+        </form>`;
+
     default:
       return `
         <div style="text-align: center; padding: 30px 0;">
@@ -704,7 +747,7 @@
 
   modal.classList.add("active");
 }
-jj
+
   function closeWidgetModal() {
     const modal = document.getElementById("widgetModal");
     modal.classList.remove("active");
@@ -718,8 +761,7 @@ jj
   console.log("Saving widget config:", data);
 
   // Build backend URL (templateId + widgetId act like templateId/pin)
-  const url = `http://localhost:8080/api/datastreams/${data.templateId}/${data.widgetId}`;
-
+const url = `${API_BASE}/datastreams/${data.templateId}/${data.widgetId}`;
 
   // Send API request
   fetch(url, {
@@ -738,11 +780,33 @@ jj
     if (!res.ok) throw new Error("Failed to save config");
     return res.json();
   })
+  // .then(saved => {  
+  //   console.log("Saved in DB:", saved);
+  //   alert("Configuration saved successfully!");
+  //   closeWidgetModal();
+  // })
+
+
   .then(saved => {
-    console.log("Saved in DB:", saved);
-    alert("Configuration saved successfully!");
-    closeWidgetModal();
-  })
+  console.log("Saved in DB:", saved);
+
+  // ✅ Send pin back to parent window
+  if (window.opener) {
+    const widget = window.opener.document.querySelector(
+      `[data-widget-id="${data.widgetId}"]`
+    );
+
+    if (widget) {
+      widget.dataset.pin = data.widgetId;   // 🔥 THIS IS THE KEY FIX
+      widget.dataset.title = data.title || "";
+      console.log("✅ Pin assigned to widget:", data.widgetId);
+    }
+  }
+
+  alert("Configuration saved successfully!");
+  closeWidgetModal();
+  window.close(); // optional: auto close page
+})
   .catch(err => {
     console.error("Error saving config:", err);
     alert("Error saving configuration!");
@@ -770,16 +834,16 @@ jj
   //realtime data push 
 
   // Push value to backend
+
 function pushValue(templateId, widgetId, value) {
-  fetch(`http://localhost:8080/api/datastreams/${templateId}/${widgetId}/value?value=${value}`, {
-    method: "POST"
+  fetch(`${API_BASE}/datastreams/${templateId}/${widgetId}/value?value=${value}`, {    method: "POST"
   }).catch(err => console.error("Push error:", err));
 }
 
 // Poll value from backend
 function startPollingValue(templateId, widgetId, updateFn) {
   setInterval(() => {
-    fetch(`http://localhost:8080/api/datastreams/${templateId}/${widgetId}/value`)
+fetch(`${API_BASE}/datastreams/${templateId}/${widgetId}/value`)
       .then(res => res.text())
       .then(val => updateFn(val))
       .catch(err => console.error("Poll error:", err));

@@ -1,3 +1,5 @@
+
+const API_BASE = "https://cloudeck-backend.onrender.com/api";
 // Initialize widget with data-stream functionality
 function initWidgetDataStream(widgetElement, type) {
     switch(type) {
@@ -22,7 +24,7 @@ function initWidgetDataStream(widgetElement, type) {
 
 // Example sendData function
 function sendDataToBackend(widgetType, value) {
-    fetch('http://localhost:8080/api/widget-data', {
+fetch(`${API_BASE}/widget-data`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ widgetType, value, userId: 1 })

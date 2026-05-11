@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>IoT Dashboard</title>
+    <title>CloudLynk</title>
     <style>
         :root {
             --primary: #2c3e50;
@@ -332,6 +332,7 @@
             position: relative;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
         }
         .template-card:hover {
             transform: translateY(-5px);
@@ -373,13 +374,14 @@
             overflow-x: auto;
         }
         
-        /* Delete Button */
+        /* Delete Button - FIXED POSITIONING */
         .template-actions {
             position: absolute;
             top: 15px;
             right: 15px;
             display: flex;
             gap: 10px;
+            z-index: 10; /* Ensure delete button stays above overlay */
         }
         .delete-btn {
             background: transparent;
@@ -390,6 +392,7 @@
             transition: var(--transition);
             padding: 5px;
             border-radius: 4px;
+            z-index: 20; /* Higher z-index to stay on top */
         }
         .delete-btn:hover {
             color: var(--danger);
@@ -414,7 +417,7 @@
             background-color:white; 
             border-radius:var(--border-radius); 
             width:90%; 
-            max-width:500px; 
+            max-width:800px; 
             max-height:90vh; 
             overflow-y:auto; 
             padding:30px; 
@@ -510,34 +513,102 @@
             transform: translateY(-2px);
         }
 
-        /* Widget library & editor */
+        /* Widget library & editor - ENHANCED */
         .widget-library { 
             display:grid; 
             grid-template-columns: repeat(3, 1fr); 
             gap:15px; 
             margin:20px 0; 
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 2px dashed #e9ecef;
         }
         .widget-item { 
-            background:var(--light); 
-            border:1px solid #ddd; 
-            border-radius:8px; 
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius:10px; 
             padding:20px; 
             text-align:center; 
             cursor:grab; 
             transition:var(--transition); 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
         }
         .widget-item:hover { 
             background:#f0f4f8; 
-            transform:translateY(-3px); 
-            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            transform:translateY(-5px); 
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            border-color: var(--secondary-light);
+        }
+        .widget-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
         }
         .widget-item i { 
-            font-size:28px; 
+            font-size:32px; 
             color:var(--secondary); 
             margin-bottom:12px; 
             display:block; 
         }
+        .widget-item div {
+            font-weight: 500;
+            color: var(--dark);
+        }
 
+        /* Joystick Widget */
+.joystick-container {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.joystick-base {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    position: relative;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    border: 3px solid white;
+}
+
+.joystick-handle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: move;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.1s ease;
+    z-index: 2;
+}
+
+.joystick-axis {
+    position: absolute;
+    font-size: 12px;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.joystick-x { bottom: -25px; left: 50%; transform: translateX(-50%); }
+.joystick-y { left: -25px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+.joystick-values {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--dark);
+    font-weight: 500;
+}
+
+        /* Enhanced Dashboard Editor */
         .dashboard-editor { 
             border: 2px dashed #d1d8e0; 
             min-height: 400px; 
@@ -545,26 +616,64 @@
             margin-top: 25px; 
             border-radius: var(--border-radius); 
             background-color: #fff; 
-            background-image: radial-gradient(#e6e6e6 1px, transparent 1px); 
-            background-size: 20px 20px; 
+            background-image: 
+                linear-gradient(90deg, transparent 79px, #f0f4f8 79px, #f0f4f8 81px, transparent 81px),
+                linear-gradient(#f0f4f8 1px, transparent 1px);
+            background-size: 100% 20px, 20px 100%;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .dashboard-editor.drag-over {
+            border-color: var(--secondary);
+            background-color: rgba(52, 152, 219, 0.05);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .dashboard-editor.empty::before {
+            content: 'Drag widgets here to build your dashboard';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--gray);
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            width: 100%;
         }
         .editor-grid { 
             display:grid; 
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
             gap:20px; 
             min-height:300px; 
         }
         .editor-widget { 
             background:white;
-            border:1px solid #ddd; 
-            border-radius:8px; 
-            padding:15px; 
+            border: 2px solid #e9ecef;
+            border-radius:10px; 
+            padding:18px; 
             cursor:move; 
-            box-shadow:0 3px 8px rgba(0,0,0,0.08); 
+            box-shadow:0 5px 15px rgba(0,0,0,0.08); 
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
         .editor-widget:hover {
-            box-shadow: 0 5px 12px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transform: translateY(-3px);
+            border-color: var(--secondary-light);
+        }
+        .editor-widget.dragging {
+            opacity: 0.7;
+            transform: rotate(5deg);
+        }
+        .editor-widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--secondary), var(--secondary-light));
         }
         .editor-widget-header { 
             display:flex; 
@@ -575,8 +684,9 @@
             border-bottom:1px solid #eee; 
         }
         .editor-widget-title { 
-            font-weight:500; 
+            font-weight:600; 
             font-size:14px; 
+            color: var(--primary);
         }
         .remove-widget { 
             background:none; 
@@ -585,9 +695,12 @@
             cursor:pointer; 
             font-size: 16px;
             transition: var(--transition);
+            padding: 4px;
+            border-radius: 4px;
         }
         .remove-widget:hover {
-            transform: scale(1.1);
+            transform: scale(1.2);
+            background-color: rgba(231, 76, 60, 0.1);
         }
 
         /* Code block */
@@ -612,8 +725,14 @@
             margin-left:5px;
             color: var(--gray);
             transition: var(--transition);
+            padding: 4px;
+            border-radius: 4px;
         }
-        .widget-actions button:hover { color: var(--secondary); transform: scale(1.1); }
+        .widget-actions button:hover { 
+            color: var(--secondary); 
+            transform: scale(1.1);
+            background-color: rgba(52, 152, 219, 0.1);
+        }
 
         /* Template View Mode */
         .template-view-mode {
@@ -656,6 +775,7 @@
             opacity: 0;
             transition: var(--transition);
             visibility: hidden;
+            z-index: 5; /* Lower than delete button */
         }
         .template-card:hover .edit-overlay {
             opacity: 1;
@@ -671,10 +791,30 @@
             font-weight: 500;
             transition: var(--transition);
             margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
         }
         .view-template-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Editor Instructions */
+        .editor-instructions {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            border-left: 4px solid var(--secondary);
+        }
+        .editor-instructions h4 {
+            margin: 0 0 8px 0;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        .editor-instructions p {
+            margin: 0;
+            color: var(--gray);
+            font-size: 14px;
         }
 
         @media (max-width:1024px) {
@@ -688,6 +828,8 @@
             .dashboard-grid { grid-template-columns: 1fr; }
             .templates-grid { grid-template-columns: 1fr; }
             .modal-content { padding: 20px; }
+            .widget-library { grid-template-columns: repeat(2,1fr); }
+            .editor-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -697,7 +839,7 @@
 <!-- Sidebar -->
 <div class="sidebar">
     <div class="sidebar-header">
-        <h2><img src="iot-icon.png" alt="IoT Icon"> IoT Dashboard</h2>
+        <h2><img src="logo.png" alt="IoT Icon"> CloudLynk</h2>
     </div>
     <ul class="sidebar-menu">
         <li class="active"><i class="fas fa-home"></i> Dashboard</li>
@@ -789,7 +931,7 @@
     </div>
 </div>
 
-<!-- Widget Editor Modal -->
+<!-- Widget Editor Modal - ENHANCED -->
 <div class="modal" id="widgetEditorModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -797,10 +939,15 @@
             <button class="close-modal" id="closeWidgetEditor">&times;</button>
         </div>
 
-        <h3>Widget Library</h3>
-        <p>Drag widgets to the dashboard area below</p>
+        <div class="editor-instructions">
+            <h4><i class="fas fa-lightbulb"></i> How to build your dashboard</h4>
+            <p>Drag widgets from the library to the dashboard area. You can rearrange them by dragging and configure each widget by clicking the gear icon.</p>
+        </div>
 
-        <div class="widget-library">
+        <h3><i class="fas fa-th-large"></i> Widget Library</h3>
+        <p>Drag these widgets to the dashboard area</p>
+
+        <div class="widget-library" id="widgetLibrary">
             <div class="widget-item" draggable="true" data-widget-type="switch">
                 <i class="fas fa-toggle-on"></i><div>Switch</div>
             </div>
@@ -819,10 +966,13 @@
             <div class="widget-item" draggable="true" data-widget-type="display">
                 <i class="fas fa-desktop"></i><div>Value Display</div>
             </div>
+            <div class="widget-item" draggable="true" data-widget-type="joystick">
+                <i class="fas fa-gamepad"></i><div>Joystick</div>
+            </div>
         </div>
 
-        <h3>Dashboard Layout</h3>
-        <div class="dashboard-editor">
+        <h3><i class="fas fa-columns"></i> Dashboard Layout</h3>
+        <div class="dashboard-editor" id="dashboardEditor">
             <div class="editor-grid" id="editorGrid">
                 <!-- Widgets will be added here by dragging -->
             </div>
@@ -855,7 +1005,8 @@
 
 <script>
 const USER_ID = 1;
-const API_BASE = 'http://localhost:8080/api/templates';
+const API_BASE = "https://cloudeck-backend.onrender.com/api";
+const WS_BASE = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`;
 
 const dashboardGrid = document.getElementById('dashboardGrid');
 const addTemplateCard = document.getElementById('addTemplateCard');
@@ -885,11 +1036,30 @@ const templateViewGrid = document.getElementById('templateViewGrid');
 const viewTemplateName = document.getElementById('viewTemplateName');
 const backToTemplatesBtn = document.getElementById('backToTemplatesBtn');
 const editTemplateBtn = document.getElementById('editTemplateBtn');
+const dashboardEditor = document.getElementById('dashboardEditor');
+const widgetLibrary = document.getElementById('widgetLibrary');
 
-let activeTemplateId = null; // Track selected template
-let templateToDeleteId = null; // Track template to delete
+let activeTemplateId = null;
+let templateToDeleteId = null;
 let isViewMode = false;
 let currentViewTemplate = null;
+
+let socket;
+
+function initWebSocket() {
+socket = new WebSocket(WS_BASE);
+
+  socket.onopen = () => console.log("✅ WebSocket connected");
+  socket.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    console.log("📨 Received update:", msg);
+    // TODO: auto-refresh the widget value when broadcasted
+  };
+  socket.onclose = () => console.log("🔌 WebSocket closed");
+}
+
+window.addEventListener("load", initWebSocket);
+
 
 /************* Modal Open/Close *************/
 function openModal(modal){ modal.style.display='flex'; document.body.style.overflow='hidden'; }
@@ -913,7 +1083,7 @@ function makeTemplateCard(template){
     card.className='template-card';
     card.innerHTML = `
         <div class="template-actions">
-            <button class="delete-btn" title="Delete template" onclick="showDeleteModal('${template.templateId}', '${escapeHtml(template.name)}')">
+            <button class="delete-btn" title="Delete template" data-template-id="${template.templateId}">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
@@ -926,17 +1096,31 @@ function makeTemplateCard(template){
             #define BLYNK_AUTH_TOKEN "${escapeQuotes(template.authToken)}"
         </div>
         <div class="edit-overlay">
-            <button class="view-template-btn" onclick="openTemplateView('${template.templateId}', '${escapeHtml(template.name)}')">
+            <button class="view-template-btn">
                 <i class="fas fa-eye"></i> View Template
             </button>
         </div>`;
     
+    // Add event listeners
+    const deleteBtn = card.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent card click event
+        showDeleteModal(template.templateId, template.name);
+    });
+    
+    const viewBtn = card.querySelector('.view-template-btn');
+    viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent card click event
+        openTemplateView(template.templateId, template.name);
+    });
+    
+    // Card click event for opening template view
     card.addEventListener('click', (e) => {
-        // Don't open editor if delete button or overlay buttons were clicked
-        if (!e.target.closest('.delete-btn') && !e.target.closest('.edit-overlay')) {
+        if (!e.target.closest('.template-actions')) {
             openTemplateView(template.templateId, template.name);
         }
     });
+    
     return card;
 }
 
@@ -944,7 +1128,9 @@ async function fetchTemplates(){
     try{
         const token = localStorage.getItem('jwtToken');
         if(!token) return;
-        const res = await fetch(API_BASE,{headers:{'Authorization':`Bearer ${token}`}});
+       const res = await fetch(`${API_BASE}/templates`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+});
         if(!res.ok) throw new Error(`Failed: ${res.status}`);
         const templates = await res.json();
         const container = document.getElementById('templates-container');
@@ -960,8 +1146,6 @@ function openTemplateView(templateId, templateName) {
     viewTemplateName.textContent = templateName;
     templateViewMode.style.display = 'block';
     dashboardGrid.style.display = 'none';
-    
-    // Load and render the template widgets in view mode
     loadViewLayout(templateId);
 }
 
@@ -990,9 +1174,7 @@ async function loadViewLayout(templateId) {
     if (!token) return;
 
     try {
-        // 1️⃣ Fetch template layout
-        const resTemplate = await fetch(`${API_BASE}/${templateId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+const resTemplate = await fetch(`${API_BASE}/templates/${templateId}`, {            headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resTemplate.ok) throw new Error('Failed to load template');
         const template = await resTemplate.json();
@@ -1004,28 +1186,27 @@ async function loadViewLayout(templateId) {
             else if (parsed.widgets && Array.isArray(parsed.widgets)) layout = parsed.widgets;
         }
 
-        // 2️⃣ Fetch all datastreams for this template
-        const resStreams = await fetch(`http://localhost:8080/api/datastreams/${templateId}`, {
+const resStreams = await fetch(`${API_BASE}/datastreams/${templateId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resStreams.ok) throw new Error('Failed to fetch datastreams');
         const datastreams = await resStreams.json();
 
-        // 3️⃣ Merge layout with datastreams
         const widgetsToRender = layout.map(lw => {
-            // If layoutJson only has type strings, lw will be string
-            if (typeof lw === 'string') {
-                // find datastream with matching type or just use first matching
-                const ds = datastreams.find(d => d.type === lw) || {};
-                return { ...ds, type: lw };
-            } else {
-                // if layoutJson has objects with pin/type
-                const ds = datastreams.find(d => d.pin === lw.pin) || {};
-                return { ...lw, ...ds };
-            }
-        });
+    if (!lw.pin) return lw;
 
-        // 4️⃣ Render
+    const ds = datastreams.find(d => d.pin === lw.pin);
+
+    if (!ds) return lw;
+
+    return {
+        type: lw.type,
+        pin: ds.pin,
+        value: ds.value,
+        title: ds.title
+    };
+});
+
         templateViewGrid.innerHTML = '';
         if (widgetsToRender.length === 0) {
             templateViewGrid.innerHTML = `<div class="device-card" style="grid-column: 1 / -1; text-align: center;">
@@ -1035,7 +1216,7 @@ async function loadViewLayout(templateId) {
         } else {
             widgetsToRender.forEach(w => {
                 templateViewGrid.appendChild(
-                    createViewWidget(w.type, w.pin, w.value ?? 0, w.title ?? "")
+                    createViewWidget(w.type, w.pin, w.value ?? 0, w.title ?? "", templateId)
                 );
             });
         }
@@ -1046,25 +1227,8 @@ async function loadViewLayout(templateId) {
     }
 }
 
-// datastreams: array of objects fetched from backend
-// Each object: { templateId, pin, type, title, value, ... }
-
-function renderDashboard(datastreams) {
-    console.log("📡 Datastreams from backend:", datastreams); // 🔍 log full datastreams array
-
-    const dashboardGrid = document.getElementById("dashboardGrid");
-    dashboardGrid.innerHTML = ""; // clear existing
-
-    datastreams.forEach(ds => {
-        console.log("🎨 Rendering dashboard widget with:", ds); // 🔍 log each ds
-        const widget = createViewWidget(ds.type, ds.pin, ds.value, ds.title);
-        dashboardGrid.appendChild(widget);
-    });
-}
-
-function createViewWidget(type, datastream, initialValue = 0, title = "", templateId = null) {
-    console.log("🛠️ createViewWidget called with:", { type, datastream, initialValue, title, templateId });
-
+/************* Create View Widget *************/
+function createViewWidget(type, pin, initialValue = 0, title = "", templateId = null) {
     const widgetCard = document.createElement("div");
     widgetCard.className = "device-card";
 
@@ -1085,63 +1249,55 @@ function createViewWidget(type, datastream, initialValue = 0, title = "", templa
                         <div class="slider-value">${initialValue}%</div>
                     </div>
                 </div>`;
-
             const slider = widgetCard.querySelector(".slider-input");
             const sliderValue = widgetCard.querySelector(".slider-value");
-
-            slider.addEventListener("input", () => {
-                sliderValue.textContent = `${slider.value}%`;
-            });
-
-            slider.addEventListener("change", async () => {
-                await sendValueToBackend(datastream, templateId, slider.value);
-            });
+            slider.addEventListener("input", () => sliderValue.textContent = `${slider.value}%`);
+            slider.addEventListener("change", async () => await sendValueToBackend(pin, templateId, slider.value));
             break;
 
-        case 'switch':
-            widgetCard.innerHTML = `
-                <div class="device-header">
-                    <div class="device-title">
-                        <div class="device-icon"><i class="fas fa-toggle-on"></i></div>
-                        ${title || "Switch Control"}
-                    </div>
-                    <div class="device-status online">ONLINE</div>
-                </div>
-                <div class="widget">
-                    <div class="widget-title">${title || "Power Switch"}</div>
-                    <label class="switch">
-                        <input type="checkbox" class="switch-input" ${initialValue == 1 ? "checked" : ""}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>`;
+       case 'switch':
+    widgetCard.innerHTML = `
+        <div class="device-header">
+            <div class="device-title">
+                <div class="device-icon"><i class="fas fa-toggle-on"></i></div>
+                ${title || "Switch Control"}
+            </div>
+            <div class="device-status online">ONLINE</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">${title || "Power Switch"}</div>
+            <label class="switch">
+                <input type="checkbox" class="switch-input" ${initialValue == 1 ? "checked" : ""}>
+                <span class="slider round"></span>
+            </label>
+        </div>`;
+    const switchInput = widgetCard.querySelector(".switch-input");
+    switchInput.addEventListener("change", async () => {
+        const value = switchInput.checked ? "1" : "0";
+        await sendValueToBackend(pin, templateId, value);
+    });
+    break;
 
-            const switchInput = widgetCard.querySelector(".switch-input");
-            switchInput.addEventListener("change", async () => {
-                const value = switchInput.checked ? "1" : "0";
-                await sendValueToBackend(datastream, templateId, value);
-            });
-            break;
+case 'button':
+    widgetCard.innerHTML = `
+        <div class="device-header">
+            <div class="device-title">
+                <div class="device-icon"><i class="fas fa-square"></i></div>
+                ${title || "Button Control"}
+            </div>
+            <div class="device-status online">ONLINE</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">${title || "Push Button"}</div>
+            <button class="btn btn-primary widget-button">Press</button>
+        </div>`;
+    const button = widgetCard.querySelector(".widget-button");
+    button.addEventListener("click", async () => {
+        await sendValueToBackend(pin, templateId, "1"); // alert will show if pin/templateId missing
+        setTimeout(() => sendValueToBackend(pin, templateId, "0"), 500);
+    });
+    break;
 
-        case 'button':
-            widgetCard.innerHTML = `
-                <div class="device-header">
-                    <div class="device-title">
-                        <div class="device-icon"><i class="fas fa-square"></i></div>
-                        ${title || "Button Control"}
-                    </div>
-                    <div class="device-status online">ONLINE</div>
-                </div>
-                <div class="widget">
-                    <div class="widget-title">${title || "Push Button"}</div>
-                    <button class="btn btn-primary widget-button">Press</button>
-                </div>`;
-
-            const button = widgetCard.querySelector(".widget-button");
-            button.addEventListener("click", async () => {
-                await sendValueToBackend(datastream, templateId, "1");
-                setTimeout(() => sendValueToBackend(datastream, templateId, "0"), 500);
-            });
-            break;
 
         case 'gauge':
             widgetCard.innerHTML = `
@@ -1173,6 +1329,31 @@ function createViewWidget(type, datastream, initialValue = 0, title = "", templa
                 </div>`;
             break;
 
+            case 'joystick':
+    widgetCard.innerHTML = `
+        <div class="device-header">
+            <div class="device-title">
+                <div class="device-icon"><i class="fas fa-gamepad"></i></div>
+                ${title || "Joystick Control"}
+            </div>
+            <div class="device-status online">ONLINE</div>
+        </div>
+        <div class="widget">
+            <div class="widget-title">${title || "Direction Control"}</div>
+            <div class="joystick-container">
+                <div class="joystick-base">
+                    <div class="joystick-handle" id="joystick-handle-${pin}"></div>
+                    <div class="joystick-axis joystick-x">X</div>
+                    <div class="joystick-axis joystick-y">Y</div>
+                </div>
+                <div class="joystick-values" id="joystick-values-${pin}">X: 0, Y: 0</div>
+            </div>
+        </div>`;
+    
+    // Initialize joystick functionality
+    setTimeout(() => initJoystick(pin, templateId), 100);
+    break;
+
         default:
             widgetCard.innerHTML = `<div class="device-card"><p>Unknown widget type: ${type}</p></div>`;
             break;
@@ -1181,16 +1362,38 @@ function createViewWidget(type, datastream, initialValue = 0, title = "", templa
     return widgetCard;
 }
 
-// Updated sendValueToBackend
+/************* Send Value to Backend with Datastream Check *************/
 async function sendValueToBackend(pin, templateId, value) {
+    // Step 1️⃣: Validate basic parameters
     if (!pin || !templateId) {
-        console.error("sendValueToBackend called with missing pin or templateId!", { pin, templateId, value });
+        alert("⚠️ Please configure this widget first.\n\nTip: Click the ⚙️ icon → Assign a Datastream → Save.");
+        console.warn("Widget missing pin or templateId!", { pin, templateId, value });
         return;
     }
 
+    // Step 2️⃣: Ensure user is logged in
     const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        alert("⚠️ Please login again to continue.");
+        return;
+    }
+
+    // Step 3️⃣: Send value via WebSocket for real-time ESP32 update
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "widget_update",
+            templateId: templateId,
+            pin: pin,
+            value: value
+        }));
+        console.log(`📤 Value sent via WebSocket | Pin: ${pin} | Value: ${value}`);
+    } else {
+        console.warn("⚠️ WebSocket not connected. ESP32 will not receive update.");
+    }
+
     try {
-        await fetch(`http://localhost:8080/api/datastreams/${templateId}/${pin}/value`, {
+        // Step 4️⃣: Send value to backend for database persistence
+const response = await fetch(`${API_BASE}/datastreams/${templateId}/${pin}/value`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1198,12 +1401,44 @@ async function sendValueToBackend(pin, templateId, value) {
             },
             body: JSON.stringify({ value })
         });
-    } catch (e) {
-        console.error(e);
+
+        // Step 5️⃣: Handle backend response
+        if (response.ok) {
+            console.log(`✅ Value sent to backend | Pin: ${pin} | Value: ${value}`);
+            showToast(`✅ Pin ${pin} updated to ${value}`, "success");
+        } else {
+            const text = await response.text();
+            console.error("❌ Backend error:", text);
+            showToast(`❌ Error from backend: ${text}`, "error");
+        }
+    } catch (err) {
+        console.error("🌐 Network or backend error:", err);
+        showToast("🌐 Network error! Please check connection.", "error");
     }
 }
 
+// ✅ Optional helper for lightweight toast feedback
+function showToast(message, type = "info") {
+    const toast = document.createElement("div");
+    toast.textContent = message;
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.right = "20px";
+    toast.style.padding = "10px 15px";
+    toast.style.borderRadius = "8px";
+    toast.style.color = "#fff";
+    toast.style.fontSize = "14px";
+    toast.style.zIndex = "1000";
+    toast.style.transition = "opacity 0.5s ease";
+    toast.style.opacity = "1";
 
+    if (type === "success") toast.style.background = "#4CAF50";
+    else if (type === "error") toast.style.background = "#F44336";
+    else toast.style.background = "#2196F3";
+
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 2500);
+}
 
 
 /************* Delete Template Functionality *************/
@@ -1223,7 +1458,7 @@ async function deleteTemplate() {
             return;
         }
         
-        const response = await fetch(`${API_BASE}/${templateToDeleteId}`, {
+        const response = await fetch(`${API_BASE}/templates/${templateToDeleteId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -1232,7 +1467,7 @@ async function deleteTemplate() {
         
         if (response.ok) {
             // Remove the template card from the UI
-            const templateCard = document.querySelector(`.template-card:has(button[onclick*="${templateToDeleteId}"])`);
+            const templateCard = document.querySelector(`.template-card:has(button[data-template-id="${templateToDeleteId}"])`);
             if (templateCard) {
                 templateCard.remove();
             }
@@ -1262,7 +1497,14 @@ function createTemplate(){
     const token = localStorage.getItem('jwtToken');
     if(!token){ alert("Please login"); return; }
 
-    fetch(API_BASE,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(payload)})
+fetch(`${API_BASE}/templates`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+token
+},
+body:JSON.stringify(payload)
+})
     .then(r=>{ if(!r.ok) return r.text().then(t=>{throw new Error(t||'Create failed');}); return r.json(); })
     .then(t=>{
         closeModal(addDeviceModal);
@@ -1283,45 +1525,87 @@ doneCodeBtn.addEventListener('click', () => {
     openModal(widgetEditorModal);
 });
 
-/************* Drag & Drop Widgets *************/
+/************* Enhanced Drag & Drop Widgets *************/
 let draggedWidgetType = null;
 let draggingWidget = null;
 
+// Initialize drag events for widget library
 document.querySelectorAll('.widget-item').forEach(widget => {
     widget.addEventListener('dragstart', e => {
         draggedWidgetType = widget.dataset.widgetType;
-        draggingWidget = null;
+        widget.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', draggedWidgetType);
+        e.dataTransfer.effectAllowed = 'copy';
+    });
+    
+    widget.addEventListener('dragend', e => {
+        widget.classList.remove('dragging');
+        draggedWidgetType = null;
     });
 });
 
-editorGrid.addEventListener('dragover', e => e.preventDefault());
-editorGrid.addEventListener('drop', e => {
+// Enhanced drop zone with visual feedback
+dashboardEditor.addEventListener('dragover', e => {
     e.preventDefault();
-    const after = getDragAfterElement(editorGrid, e.clientY);
+    dashboardEditor.classList.add('drag-over');
+    e.dataTransfer.dropEffect = 'copy';
+});
 
-    if (draggedWidgetType) {
-        const newWidget = createEditorWidget(draggedWidgetType);
-        if (!after) editorGrid.appendChild(newWidget);
-        else editorGrid.insertBefore(newWidget, after);
-        draggedWidgetType = null;
-    } else if (draggingWidget) {
-        if (!after) editorGrid.appendChild(draggingWidget);
-        else editorGrid.insertBefore(draggingWidget, after);
+dashboardEditor.addEventListener('dragleave', e => {
+    if (!dashboardEditor.contains(e.relatedTarget)) {
+        dashboardEditor.classList.remove('drag-over');
     }
 });
+
+dashboardEditor.addEventListener('drop', e => {
+    e.preventDefault();
+    dashboardEditor.classList.remove('drag-over');
+    
+    const widgetType = e.dataTransfer.getData('text/plain');
+    if (widgetType) {
+        const after = getDragAfterElement(editorGrid, e.clientY);
+        const newWidget = createEditorWidget(widgetType);
+        
+        if (!after) {
+            editorGrid.appendChild(newWidget);
+        } else {
+            editorGrid.insertBefore(newWidget, after);
+        }
+        
+        updateDashboardEditorState();
+    }
+});
+
+// Update dashboard editor visual state
+function updateDashboardEditorState() {
+    if (editorGrid.children.length === 0) {
+        dashboardEditor.classList.add('empty');
+    } else {
+        dashboardEditor.classList.remove('empty');
+    }
+}
 
 function makeDraggable(widget) {
     widget.draggable = true;
     widget.addEventListener('dragstart', e => {
         draggingWidget = widget;
         widget.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', 'reorder');
+        e.dataTransfer.effectAllowed = 'move';
     });
+    
     widget.addEventListener('dragend', e => {
         draggingWidget = null;
         widget.classList.remove('dragging');
     });
+    
     const removeBtn = widget.querySelector('.remove-widget');
-    if (removeBtn) removeBtn.addEventListener('click', () => widget.remove());
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            widget.remove();
+            updateDashboardEditorState();
+        });
+    }
 }
 
 function createEditorWidget(type) {
@@ -1334,7 +1618,7 @@ function createEditorWidget(type) {
             <div class="editor-widget-title">${widgetTitle(type)}</div>
             <div class="widget-actions">
                 <button class="widget-settings" title="Configure Data Stream"><i class="fas fa-cog"></i></button>
-                <button class="remove-widget"><i class="fas fa-times"></i></button>
+                <button class="remove-widget" title="Remove widget"><i class="fas fa-times"></i></button>
             </div>
         </div>
         ${widgetBody(type)}
@@ -1387,6 +1671,15 @@ function widgetBody(type){
         case 'display':
             return `<div class="graph-container"><div class="graph-placeholder">${type.charAt(0).toUpperCase() + type.slice(1)} Preview</div></div>`;
         default: return '';
+        case 'joystick':
+    return `<div class="joystick-container">
+        <div class="joystick-base">
+            <div class="joystick-handle" id="joystick-handle"></div>
+            <div class="joystick-axis joystick-x">X</div>
+            <div class="joystick-axis joystick-y">Y</div>
+        </div>
+        <div class="joystick-values">X: 0, Y: 0</div>
+    </div>`;
     }
 }
 
@@ -1394,7 +1687,144 @@ function generateWidgetId(){
     return 'w_' + Math.random().toString(36).substr(2,9);
 }
 
+/************* Joystick Functions *************/
+function initJoystick(pin, templateId) {
+    const handle = document.getElementById(`joystick-handle-${pin}`);
+    const valuesDisplay = document.getElementById(`joystick-values-${pin}`);
+    const base = handle?.parentElement;
+    
+    if (!handle || !base || !valuesDisplay) {
+        console.warn('Joystick elements not found');
+        return;
+    }
+    
+    let isDragging = false;
+    const maxDistance = 35; // Maximum movement distance from center
+    
+    function updateJoystick(x, y) {
+        const normalizedX = Math.max(-100, Math.min(100, Math.round((x / maxDistance) * 100)));
+        const normalizedY = Math.max(-100, Math.min(100, Math.round((y / maxDistance) * 100)));
+        
+        // Update handle position
+        handle.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+        
+        // Update values display
+        valuesDisplay.textContent = `X: ${normalizedX}, Y: ${normalizedY}`;
+        
+        // Send values to backend
+        sendJoystickValue(pin, templateId, normalizedX, normalizedY);
+    }
+    
+    function handleMove(clientX, clientY) {
+        if (!isDragging) return;
+        
+        const baseRect = base.getBoundingClientRect();
+        const baseCenterX = baseRect.left + baseRect.width / 2;
+        const baseCenterY = baseRect.top + baseRect.height / 2;
+        
+        const deltaX = clientX - baseCenterX;
+        const deltaY = clientY - baseCenterY;
+        
+        // Calculate distance from center
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        // Limit movement to maxDistance
+        const limitedX = distance > maxDistance ? (deltaX / distance) * maxDistance : deltaX;
+        const limitedY = distance > maxDistance ? (deltaY / distance) * maxDistance : deltaY;
+        
+        updateJoystick(limitedX, limitedY);
+    }
+    
+    function resetJoystick() {
+        if (isDragging) {
+            isDragging = false;
+            // Reset to center
+            updateJoystick(0, 0);
+        }
+    }
+    
+    // Mouse events
+    handle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        handleMove(e.clientX, e.clientY);
+    });
+    
+    document.addEventListener('mouseup', resetJoystick);
+    
+    // Touch events for mobile
+    handle.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        e.preventDefault();
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0 && isDragging) {
+            handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    });
+    
+    document.addEventListener('touchend', resetJoystick);
+    
+    // Prevent context menu on joystick
+    handle.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+    });
+}
+
+async function sendJoystickValue(pin, templateId, x, y) {
+    // Validate parameters
+    if (!pin || !templateId) {
+        console.warn("Joystick missing pin or templateId!", { pin, templateId });
+        return;
+    }
+    
+    const token = localStorage.getItem('jwtToken');
+    if (!token) {
+        console.warn("No authentication token");
+        return;
+    }
+    
+    // Create combined value (you can change this format as needed)
+    const combinedValue = JSON.stringify({ x: x, y: y });
+    
+    // Send via WebSocket for real-time updates
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+            type: "widget_update",
+            templateId: templateId,
+            pin: pin,
+            value: combinedValue
+        }));
+        console.log(`📤 Joystick value sent via WebSocket | Pin: ${pin} | X: ${x} | Y: ${y}`);
+    }
+    
+    // Send to backend for persistence (using your existing endpoint)
+    try {
+const response = await fetch(`${API_BASE}/datastreams/${templateId}/${pin}/value`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ value: combinedValue })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        console.log(`✅ Joystick value saved to backend | Pin: ${pin} | X: ${x} | Y: ${y}`);
+    } catch (err) {
+        console.error("🌐 Error sending joystick value to backend:", err);
+    }
+}
+// Initialize existing widgets in editor
 [...editorGrid.children].forEach(makeDraggable);
+updateDashboardEditorState();
 
 function getDragAfterElement(container, y){
     const elements = [...container.querySelectorAll('.editor-widget:not(.dragging)')];
@@ -1409,13 +1839,18 @@ function getDragAfterElement(container, y){
 /************* Save Dashboard Layout *************/
 saveDashboardBtn.addEventListener('click', async () => {
     if (!activeTemplateId) return alert("No template selected!");
-    const layout = [...editorGrid.children].map(w => w.dataset.widgetType);
+    // const layout = [...editorGrid.children].map(w => w.dataset.widgetType);
+    const layout = [...editorGrid.children].map(w => ({
+    type: w.dataset.widgetType,
+    widgetId: w.dataset.widgetId || generateWidgetId(),
+    pin: w.dataset.pin || null,
+    title: w.dataset.title || ""
+}));
     const token = localStorage.getItem('jwtToken');
     if (!token) return alert("Please login");
 
     try {
-        const resGet = await fetch(`${API_BASE}/${activeTemplateId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+const resGet = await fetch(`${API_BASE}/templates/${activeTemplateId}`, {            headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!resGet.ok) throw new Error('Template not found');
         const template = await resGet.json();
@@ -1427,7 +1862,7 @@ saveDashboardBtn.addEventListener('click', async () => {
             layoutJson: JSON.stringify(layout)
         };
 
-        const resPost = await fetch(`${API_BASE}`, {
+const resPost = await fetch(`${API_BASE}/templates`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(updatedTemplate)
@@ -1455,7 +1890,7 @@ async function loadDashboardLayout(templateId) {
     if (!token) return;
 
     try {
-        const res = await fetch(`${API_BASE}/${templateId}`, {
+        const res = await fetch(`${API_BASE}/templates/${templateId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Failed to load template');
@@ -1475,13 +1910,25 @@ async function loadDashboardLayout(templateId) {
             }
         }
 
-        editorGrid.innerHTML = '';
-        layout.forEach(widget => {
-            editorGrid.appendChild(createEditorWidget(widget));
-        });
+       layout.forEach(widget => {
+    if (typeof widget === "string") {
+        editorGrid.appendChild(createEditorWidget(widget));
+    } else {
+        const w = createEditorWidget(widget.type);
+
+        // Restore stored properties
+        w.dataset.widgetId = widget.widgetId;
+        w.dataset.pin = widget.pin;
+        w.dataset.title = widget.title;
+
+        editorGrid.appendChild(w);
+    }
+});
+        updateDashboardEditorState();
     } catch (e) {
         console.error(e);
         editorGrid.innerHTML = '';
+        updateDashboardEditorState();
     }
 }
 

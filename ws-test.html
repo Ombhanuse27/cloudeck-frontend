@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Test</title>
+</head>
+<body>
+  <h2>WebSocket Test Page</h2>
+  <button id="connectBtn">Connect</button>
+  <button id="sendBtn" disabled>Send Test Message</button>
+  <pre id="log"></pre>
+
+  <script>
+    let socket;
+
+const WS_BASE = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`;
+
+const log = msg => document.getElementById('log').textContent += msg + "\n";
+
+document.getElementById('connectBtn').onclick = () => {
+  socket = new WebSocket(WS_BASE);
+
+  socket.onopen = () => {
+    log("✅ Connected to WebSocket server");
+    document.getElementById('sendBtn').disabled = false;
+  };
+
+  socket.onmessage = (event) => log("📩 Message from backend: " + event.data);
+
+  socket.onerror = (err) => log("❌ Error: " + err.message);
+
+  socket.onclose = () => log("🔌 Connection closed");
+};
+
+document.getElementById('sendBtn').onclick = () => {
+  const msg = JSON.stringify({type: "ping", data: "Hello Backend"});
+  socket.send(msg);
+  log("📤 Sent to backend: " + msg);
+};
+  </script>
+</body>
+</html>

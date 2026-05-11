@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Widget Documentation – IoT Platform</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+        width: 260px;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: #1f4e79;
+        color: white;
+        padding-top: 25px;
+        overflow-y: auto;
+        box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+    }
+
+    .sidebar h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .sidebar a {
+        display: block;
+        padding: 12px 20px;
+        color: white;
+        text-decoration: none;
+        margin: 5px 0;
+        font-size: 16px;
+        border-left: 4px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .sidebar a:hover {
+        background: #163a5a;
+        border-left: 4px solid #4dabff;
+    }
+
+    /* MAIN CONTENT */
+    .content {
+        margin-left: 270px;
+        padding: 35px;
+    }
+
+    .widget-section {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        margin-bottom: 40px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.08);
+    }
+
+    .widget-section h1 {
+        color: #1f4e79;
+        margin-bottom: 10px;
+    }
+
+    .line {
+        height: 3px;
+        width: 60px;
+        background: #1f4e79;
+        margin-bottom: 20px;
+    }
+
+    .guide-block {
+        background: #f3f7ff;
+        padding: 15px;
+        margin: 12px 0;
+        border-left: 4px solid #1f4e79;
+        border-radius: 5px;
+    }
+
+    .guide-block strong {
+        color: #1f4e79;
+    }
+
+    .image-box {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .image-box img {
+        width: 60%;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 40px;
+        color: #666;
+        padding-bottom: 30px;
+    }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>Widget Guide</h2>
+
+    <!-- ADD MORE LINKS AS YOU ADD MORE WIDGET GUIDES -->
+    <a href="#switch-widget">Switch Widget</a>
+    <a href="#button-widget">Button Widget (Coming Soon)</a>
+    <a href="#slider-widget">Slider Widget (Coming Soon)</a>
+    <a href="#gauge-widget">Gauge Widget (Coming Soon)</a>
+    <a href="#chart-widget">Chart Widget (Coming Soon)</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+    <!-- SWITCH WIDGET GUIDE -->
+    <div class="widget-section" id="switch-widget">
+        <h1>Switch Widget Configuration</h1>
+        <div class="line"></div>
+
+        <div class="image-box">
+            <img src="90bb30e4-088b-43f0-b592-6833efa55689.png" alt="Switch Widget Image">
+            <p style="color:#666; font-size:14px;">Example Screenshot of Switch Widget Configuration</p>
+        </div>
+
+        <div class="guide-block">
+            <strong>Title:</strong>  
+            Enter the name of your widget. This will be displayed above the switch.
+        </div>
+
+        <div class="guide-block">
+            <strong>Datastream:</strong>  
+            Select which datastream the switch should control.  
+            This defines where ON/OFF values will be sent.
+        </div>
+
+        <div class="guide-block">
+            <strong>On Value & Off Value:</strong>  
+            - ON Value → <strong>1</strong>  
+            - OFF Value → <strong>0</strong>  
+            These values are sent to your device when the switch toggles.
+        </div>
+
+        <div class="guide-block">
+            <strong>Show On/Off Labels:</strong>  
+            Tick this if you want visible labels near the switch.
+        </div>
+
+        <div class="guide-block">
+            <strong>On Label & Off Label:</strong>  
+            Enter custom text for ON and OFF states.  
+            Example: ON → START, OFF → STOP
+        </div>
+
+        <div class="guide-block">
+            <strong>Label Position:</strong>  
+            Choose where the label appears → Left, Right, Top, Bottom.
+        </div>
+
+        <div class="guide-block">
+            <strong>Hide Widget Name:</strong>  
+            Check this if you want to hide the widget title for clean UI.
+        </div>
+
+    </div>
+
+    <!-- Placeholder sections for future widgets -->
+    <div class="widget-section" id="button-widget">
+        <h1>Button Widget Guide</h1>
+        <div class="line"></div>
+        <p>This section will be added when you provide details.</p>
+    </div>
+
+    <div class="widget-section" id="slider-widget">
+        <h1>Slider Widget Guide</h1>
+        <div class="line"></div>
+        <p>This section will be added when you provide details.</p>
+    </div>
+
+    <div class="widget-section" id="gauge-widget">
+        <h1>Gauge Widget Guide</h1>
+        <div class="line"></div>
+        <p>This section will be added when you provide details.</p>
+    </div>
+
+    <div class="widget-section" id="chart-widget">
+        <h1>Chart Widget Guide</h1>
+        <div class="line"></div>
+        <p>This section will be added when you provide details.</p>
+    </div>
+
+    <div class="footer">
+        Documentation System © 2025 – All Widget Guides Will Be Added Here
+    </div>
+
+</div>
+
+</body>
+</html>
